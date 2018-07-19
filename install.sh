@@ -111,11 +111,11 @@ test -f "$BUILD_ROOT$INSTALL_ROOT"/bin/$RUNTIME && \
 test -f "$BUILD_ROOT$SBCL_HOME"/sbcl.core && \
     mv "$BUILD_ROOT$SBCL_HOME"/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core.old
 
-cp src/runtime/$RUNTIME "$BUILD_ROOT$INSTALL_ROOT"/bin/
-cp output/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core
-cp src/runtime/sbcl.mk "$BUILD_ROOT$SBCL_HOME"/sbcl.mk
+install src/runtime/$RUNTIME "$BUILD_ROOT$INSTALL_ROOT"/bin/
+install output/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core
+install src/runtime/sbcl.mk "$BUILD_ROOT$SBCL_HOME"/sbcl.mk
 for i in $(grep '^LIBSBCL=' src/runtime/sbcl.mk | cut -d= -f2-) ; do
-    cp "src/runtime/$i" "$BUILD_ROOT$SBCL_HOME/$i"
+    install "src/runtime/$i" "$BUILD_ROOT$SBCL_HOME/$i"
 done
 
 # installing contrib
