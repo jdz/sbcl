@@ -50,7 +50,7 @@ done
 ensure_dirs ()
 {
     for j in "$@"; do
-         test -d "$j" || mkdir -p "$j"
+         test -d "$j" || mkdir -m u=rwx,go=rx -p "$j"
     done;
 }
 
@@ -111,20 +111,19 @@ test -f "$BUILD_ROOT$INSTALL_ROOT"/bin/$RUNTIME && \
 test -f "$BUILD_ROOT$SBCL_HOME"/sbcl.core && \
     mv "$BUILD_ROOT$SBCL_HOME"/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core.old
 
-cp src/runtime/$RUNTIME "$BUILD_ROOT$INSTALL_ROOT"/bin/
-cp output/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core
+install src/runtime/$RUNTIME "$BUILD_ROOT$INSTALL_ROOT"/bin/
+install output/sbcl.core "$BUILD_ROOT$SBCL_HOME"/sbcl.core
 test -f src/runtime/libsbcl.so && \
-    cp src/runtime/libsbcl.so "$BUILD_ROOT$INSTALL_ROOT"/lib/
-
-cp src/runtime/sbcl.mk "$BUILD_ROOT$SBCL_HOME"/sbcl.mk
+     install src/runtime/libsbcl.so "$BUILD_ROOT$INSTALL_ROOT"/lib/
+install src/runtime/sbcl.mk "$BUILD_ROOT$SBCL_HOME"/sbcl.mk
 for i in $(grep '^LIBSBCL=' src/runtime/sbcl.mk | cut -d= -f2-) ; do
-    cp "src/runtime/$i" "$BUILD_ROOT$SBCL_HOME/$i"
+    install "src/runtime/$i" "$BUILD_ROOT$SBCL_HOME/$i"
 done
 
 # installing contrib
 
 ensure_dirs "$BUILD_ROOT$SBCL_HOME/contrib/"
-cp obj/sbcl-home/contrib/* "$BUILD_ROOT$SBCL_HOME/contrib/"
+install obj/sbcl-home/contrib/* "$BUILD_ROOT$SBCL_HOME/contrib/"
 
 echo
 echo "SBCL has been installed:"
