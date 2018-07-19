@@ -179,12 +179,17 @@ directly instantiated.")))
                                                       flags sockaddr (sb-alien:addr sa-len))
                                    len)
                    (progn
-                     (loop for i from 0 below (min len length)
-                        do (setf (elt buffer i)
-                                 (cond
-                                   ((or (eql element-type 'character) (eql element-type 'base-char))
-                                    (code-char (sb-alien:deref (sb-alien:deref copy-buffer) i)))
-                                   (t (sb-alien:deref (sb-alien:deref copy-buffer) i)))))
+                     (etypecase buffer
+                       ((or (array character)
+                            (array base-char))
+                        (loop for i from 0 below (min len length)
+                              do (setf (aref buffer i)
+                                       (code-char
+                                        (sb-alien:deref (sb-alien:deref copy-buffer) i)))))
+                       ((array (unsigned-byte 8))
+                        (loop for i from 0 below (min len length)
+                              do (setf (aref buffer i)
+                                       (sb-alien:deref (sb-alien:deref copy-buffer) i)))))
                      (multiple-value-call #'values buffer len
                        (bits-of-sockaddr socket sockaddr)))
                  (:interrupted nil)))
