@@ -747,7 +747,7 @@ should not be used."
                       (error :output)
                       (if-error-exists :error)
                       status-hook
-                      (external-format :default)
+                      (external-format :default external-format-p)
                       directory
                       preserve-fds
                       #+win32 (escape-arguments t)
@@ -876,7 +876,19 @@ Users Manual for details about the PROCESS structure.
          (args (prepare-args (cons progname args) #+win32 escape-arguments))
          (directory (and directory (native-namestring directory)))
          ;; Gag.
-         (cookie (list 0)))
+         (cookie (list 0))
+         ;; Supplied external format implies characters will be read
+         ;; from the stream.  Currently only used for :OUTPUT stream.
+         ;;
+         ;; XXX: In case of :ASCII we might want to use BASE-CHAR as
+         ;; element-type, but we do not want to special case this here.
+         ;; Also the buffer created by SET-FD-STREAM-ROUTINES has a
+         ;; hard-coded :element-type 'CHARACTER (even though
+         ;; MAKE-FD-STREAM defaults element-type to 'BASE-CHAR).
+         (element-type (if (and external-format-p
+                                (neq :default external-format))
+                           'character
+                           :default)))
     (unwind-protect
          ;; Note: despite the WITH-* names, these macros don't
          ;; expand into UNWIND-PROTECT forms.  They're just
@@ -917,7 +929,8 @@ Users Manual for details about the PROCESS structure.
                                       :direction :output
                                       :if-exists if-output-exists
                                       :if-does-not-exist :create
-                                      :external-format external-format)
+                                      :external-format external-format
+                                      :element-type element-type)
                (with-fd-and-stream-for ((stderr error-stream)  :error
                                         error cookie
                                         :direction :output
@@ -1160,7 +1173,10 @@ Users Manual for details about the PROCESS structure.
 ;;; stream as the second value.
 (defun get-descriptor-for (argument object cookie
                            &rest keys
-                           &key direction (external-format :default) wait
+                           &key direction
+                                (external-format :default)
+                                (element-type :default)
+                                wait
                            &allow-other-keys)
   (declare (ignore wait)) ;This is explained below.
   ;; Our use of a temporary file dates back to very old CMUCLs, and
@@ -1232,8 +1248,9 @@ Users Manual for details about the PROCESS structure.
                  (:output
                   (push write-fd *close-in-parent*)
                   (let ((stream (make-fd-stream read-fd :input t
-                                                        :element-type :default
+                                                        :element-type element-type
                                                         :external-format external-format
+                                                        :input-buffer-p (neq :default element-type)
                                                         :auto-close t)))
                     (push stream *close-streams-on-error*)
                     (values write-fd stream)))
